@@ -1,0 +1,196 @@
+---
+title: "ROAD ACCIDENTS OF INDIA IN 2018"
+author: "GROUP 7"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    social: ["twitter","facebook","menu"]
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(knitr)
+library(ggplot2)
+library(dplyr)
+library(plotly)
+library(DT)
+library(rpivotTable)
+library(openintro)
+library(ggvis)
+```
+```{r}
+df=read.csv("C:\\Users\\DELL\\Downloads\\road_accidents_18.csv")
+```
+
+```{r}
+df=df%>%rename_with(tolower)
+data=within(df,{
+  x2018...rank=ordered(x2018...rank)
+  over.speeding...number.of...rank=ordered(over.speeding...number.of...rank)
+})
+top_10_acc=data%>% filter(x2018...rank<=10) 
+top10_overspeed_states=data%>% filter(over.speeding...number.of...rank<=10) 
+top10_accidents_withLicense=data%>% filter(valid.permanent...rank<=10)
+south_india=filter(data,
+                   states.uts %in% c("Andhra Pradesh","Karnataka","Kerala","Tamil Nadu","Telangana"))
+central_india=filter(data,
+                     states.uts %in% c("Chhattisgarh","Madhya Pradesh","Uttarakhand","Uttar Pradesh"))
+west_india=filter(data,
+                  states.uts %in% c("Goa","Gujarat","Maharashtra"))
+east_india=filter(data,
+                  states.uts %in% c("Bihar","Jharkhand","Odisha","West Bengal"))
+north_india=filter(data,
+                   states.uts %in% c("Haryana","Himachal Pradesh","Jammu & Kashmir","Punjab"
+                                     ,"Rajasthan"))
+north_east_india=filter(data,
+                        states.uts %in% c("Arunachal Pradesh","Assam","Manipur","Meghalaya",
+                                          "Mizoram","Nagaland","Tripura","Sikkim"))
+ut_india=filter(data,
+                states.uts %in% c("Andaman & Nicobar Islands","Chandigarh","Dadra & Nagar Haveli","Dadra & Nagar Haveli",
+                                  "Delhi","Lakshadweep","Puducherry"))
+```
+
+```{r}
+mycolors=c("blue","#FFC125","darkgreen","darkorange")
+```
+
+Interactive Data Visualization
+=====================================
+
+Row
+-------------------------------------
+
+### TOP RECORDS ANALYSIS
+
+```{r}
+valueBox(paste(max(top_10_acc$x2018...number)),
+         color = "warning")
+```
+
+### TOP OVERSPEEDING COUNT
+
+```{r}
+valueBox(max(top10_overspeed_states$over.speeding...number.of...number),
+         icon = "fa-user")
+```
+
+### TOtal DRIVING LICENSE HOLDERS
+
+```{r}
+gauge(round(data$valid.permanent...number,
+            digits = 2),
+            min = 0,
+            max = 60000,
+            gaugeSectors(danger = c(0, 10000),
+                         warning = c(10000, 30000),
+                         success = c(30000,60000 ),
+                         colors = c("red", "yellow", "green")))
+```
+
+### SOUTH INDIA
+```{r}
+valueBox(sum(south_india$valid.permanent...number),
+         icon = 'fa-building')
+```
+
+### CENTRAL INDIA
+```{r}
+valueBox(sum(central_india$valid.permanent...number),
+         icon = 'fa-building')
+```
+
+Row
+-------------------
+### WEST INDIA
+```{r}
+valueBox(sum(west_india$valid.permanent...number),
+         icon = 'fa-building')
+```
+
+### EAST INDIA
+```{r}
+valueBox(sum(east_india$valid.permanent...number),
+         icon = 'fa-building')
+```
+
+### NORTH INDIA
+```{r}
+valueBox(sum(north_india$valid.permanent...number),
+         icon = 'fa-building')
+```
+
+### NORTH-EAST INDIA
+```{r}
+valueBox(sum(north_east_india$valid.permanent...number),
+         icon = 'fa-building')
+```
+
+Row
+-------------------------------
+
+Data Table
+========================================
+
+```{r}
+datatable(data,
+          caption = "ACCIDENT DATA",
+          rownames = T,
+          filter = "top",
+          options = list(pageLength = 25))
+
+```
+
+Row
+----------------------------------
+
+Pivot Table
+=========================================
+
+```{r}
+rpivotTable(df,
+            aggregatorName = "sum",
+            columns = "Over.Speeding...Persons.Killed...Number",
+            rows="States.UTs",
+            vals="freq",
+            rendererName = "Heatmap",
+            overflow="scroll")
+
+```
+
+Summary {data-orientation=columns} 
+===========================================
+
+Column 
+-----------------------------------
+
+### Max Accidents
+
+```{r}
+valueBox(max(data$x2018...number),
+         icon = "fa-user" )
+```
+
+### Average Accidents in 2018
+```{r}
+valueBox(round(mean(data$x2018...number),
+               digits = 2),
+         icon = "fa-area-chart")
+```
+
+Column
+---------------------------
+
+
+Report
+
+* This is a report on `r length(df$states.uts)` states of observation of accidents in india.
+
+* The average accidents report `r mean(df$x2018...number)`.
+
+This report was generated on `r format(Sys.Date(), format = "%B %d, %Y")`.
+
+Column
+---------------------------
+
